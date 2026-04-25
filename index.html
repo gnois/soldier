@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Soldier Assault</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #020617; color: white; touch-action: none; font-family: sans-serif; }
+        canvas { display: block; }
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .shop-tab-active {
+            background: #06b6d4;
+            color: #0f172a;
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.4);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 10px;
+            border: 2px solid #0f172a;
+        }
+        .item-card {
+            transition: all 0.2s ease;
+        }
+        .item-card:hover {
+            transform: translateY(-2px);
+            background: rgba(30, 41, 59, 0.8);
+        }
+        .scanlines {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            background-size: 100% 3px, 3px 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+        #minimap {
+            width: 160px;
+            height: 160px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 2px solid rgba(6, 182, 212, 0.3);
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+        .map-dot {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <canvas id="gameCanvas"></canvas>
+    <div class="scanlines"></div>
+
+    <!-- HUD -->
+    <div id="hud" class="absolute top-0 left-0 w-full p-6 flex justify-between items-start pointer-events-none hidden z-10">
+        <div class="flex flex-col gap-2">
+            <div class="text-3xl font-black text-cyan-400 italic">SCORE: <span id="scoreDisplay">0</span></div>
+            <div class="flex items-center gap-2 text-amber-400 font-bold text-xl">
+                <div class="w-4 h-4 bg-amber-400 rounded-full shadow-[0_0_10px_#fbbf24]"></div>
+                <span>COINS: <span id="coinHUD">0</span></span>
+            </div>
+            <div class="text-slate-400 font-bold uppercase tracking-widest text-xs">WAVE: <span id="waveDisplay">1</span></div>
+            
+            <div class="mt-4 w-72">
+                <div class="flex justify-between text-xs font-black mb-1 text-slate-400 tracking-widest uppercase">
+                    <span id="armorNameDisplay">BASIC MESH</span>
+                    <span id="healthText">100%</span>
+                </div>
+                <div class="h-3 w-full bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+                    <div id="healthBar" class="h-full bg-cyan-500 transition-all duration-300 w-full shadow-[0_0_15px_rgba(6,182,212,0.6)]"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex flex-col items-end gap-2">
+            <div id="minimapContainer" class="p-1 bg-slate-900/40 rounded-xl border border-slate-800 backdrop-blur-sm">
+                <div class="text-[10px] font-bold text-cyan-500 uppercase tracking-tighter mb-1 ml-1">Tactical Map</div>
+                <div id="minimap">
+                    <!-- Dots injected by JS -->
+                    <div id="minimapContent"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Menu -->
+    <div id="mainMenu" class="absolute inset-0 flex flex-col items-center justify-center z-20 glass-panel">
+        <div class="absolute top-8 left-8">
+            <button id="openShopBtn" class="flex items-center gap-4 px-8 py-4 bg-slate-800 hover:bg-cyan-600 border border-slate-700 rounded-2xl transition-all group">
+                <span class="text-2xl">🛒</span>
+                <div class="text-left">
+                    <div class="text-[10px] font-black uppercase text-slate-500 group-hover:text-cyan-100">Marketplace</div>
+                    <div class="font-black uppercase tracking-widest text-white">The Black Box</div>
+                </div>
+            </button>
+        </div>
+
+        <div class="absolute top-8 right-8 text-right">
+            <div class="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] mb-1">Permanent Vault</div>
+            <div class="flex items-center gap-3 justify-end">
+                <div class="w-6 h-6 bg-amber-500 rounded-full shadow-[0_0_15px_rgba(245,158,11,0.5)]"></div>
+                <div class="text-4xl font-black text-amber-400" id="menuCoinDisplay">0</div>
+            </div>
+        </div>
+
+        <h1 class="text-9xl font-black mb-4 text-transparent bg-clip-text bg-gradient-to-b from-cyan-400 to-blue-700 italic tracking-tighter text-center">SOLDIER ASSAULT</h1>
+        <p class="text-slate-400 text-xl tracking-[0.5em] uppercase mb-12">100 Tiers of Augmentation</p>
+        
+        <button id="startBtn" class="px-20 py-6 bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-black text-3xl rounded-full transition-all hover:scale-105 active:scale-95 shadow-[0_0_40px_rgba(6,182,212,0.4)] uppercase italic tracking-widest">
+            Enter the Grid
+        </button>
+    </div>
+
+    <!-- Expanded Shop -->
+    <div id="shopScreen" class="absolute inset-0 flex items-center justify-center z-30 glass-panel hidden p-4">
+        <div class="w-full max-w-6xl h-[90vh] bg-slate-950 rounded-3xl border border-slate-800 flex flex-col shadow-2xl overflow-hidden">
+            <!-- Shop Header -->
+            <div class="p-8 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
+                <div>
+                    <h2 class="text-5xl font-black text-white italic tracking-tighter">EQUIPMENT GRID</h2>
+                    <p class="text-cyan-500 font-bold uppercase text-xs tracking-widest">50 Weapons & 50 Armors Available</p>
+                </div>
+                <div class="flex items-center gap-6">
+                    <div class="text-right">
+                        <div class="text-[10px] font-black text-slate-500 uppercase">Your Balance</div>
+                        <div class="text-3xl font-black text-amber-400" id="shopCoinDisplay">0</div>
+                    </div>
+                    <button id="closeShopBtn" class="bg-slate-800 hover:bg-rose-600 p-4 rounded-xl transition-all">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="3" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Categories -->
+            <div class="flex border-b border-slate-800">
+                <button id="weaponsTab" class="flex-1 py-6 text-xl font-black uppercase tracking-widest shop-tab-active transition-all">Weapons (50)</button>
+                <button id="armorsTab" class="flex-1 py-6 text-xl font-black uppercase tracking-widest bg-slate-900 text-slate-500 hover:text-white transition-all">Armor (50)</button>
+            </div>
+
+            <!-- Item Grid Area -->
+            <div id="shopContent" class="flex-1 overflow-y-auto p-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 custom-scrollbar bg-slate-950">
+                <!-- 100 items will be generated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Over -->
+    <div id="gameOverScreen" class="absolute inset-0 flex flex-col items-center justify-center z-20 glass-panel hidden text-center">
+        <h2 class="text-9xl font-black mb-4 text-rose-500 italic tracking-tighter">GAME OVER</h2>
+        <div class="bg-slate-900/80 p-10 rounded-3xl border border-slate-800 w-full max-w-lg mb-10">
+            <div class="text-slate-500 uppercase font-bold text-xs tracking-widest mb-2">Earnings Report</div>
+            <div class="text-6xl font-black text-amber-400 mb-6" id="earnedCoins">+0</div>
+            <div class="flex justify-between text-slate-400 font-bold border-t border-slate-800 pt-6">
+                <span>Final Score: <span id="finalScore" class="text-white">0</span></span>
+                <span>Wave: <span id="finalWave" class="text-white">1</span></span>
+            </div>
+        </div>
+        <div class="flex gap-6">
+            <button id="restartBtn" class="px-12 py-5 bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-black text-xl rounded-full transition-all uppercase tracking-widest italic">Retry</button>
+            <button id="homeBtn" class="px-12 py-5 bg-slate-800 hover:bg-slate-700 text-white font-black text-xl rounded-full transition-all uppercase tracking-widest border border-slate-700">Menu</button>
+        </div>
+    </div>
+
+    <script>
+        /** @type {HTMLCanvasElement} */
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d', { alpha: false });
+        const minimapContent = document.getElementById('minimapContent');
+        const WORLD_SIZE = 3000;
+        
+        function fillRoundedRect(c, x, y, width, height, radius) {
+            c.beginPath();
+            c.moveTo(x + radius, y);
+            c.lineTo(x + width - radius, y);
+            c.quadraticCurveTo(x + width, y, x + width, y + radius);
+            c.lineTo(x + width, y + height - radius);
+            c.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            c.lineTo(x + radius, y + height);
+            c.quadraticCurveTo(x, y + height, x, y + height - radius);
+            c.lineTo(x, y + radius);
+            c.quadraticCurveTo(x, y, x + radius, y);
+            c.closePath();
+            c.fill();
+        }
+
+        const WEAPON_NAMES = ["Blade", "Saber", "Edge", "Cutter", "Reaver", "Slasher", "Cleaver", "Katana", "Glaive", "Eviscerator"];
+        const WEAPON_PREFIXES = ["Rust", "Iron", "Neon", "Pulse", "Sonic", "Thermal", "Plasma", "Void", "Quantum", "Omega"];
+        const ARMOR_NAMES = ["Mesh", "Suit", "Plate", "Shell", "Frame", "Guard", "Skin", "Chassis", "Core", "Bastion"];
+        const ARMOR_COLORS = ['#06b6d4', '#0891b2', '#0e7490', '#10b981', '#059669', '#8b5cf6', '#7c3aed', '#d946ef', '#f59e0b', '#ef4444'];
+
+        const SHOP_ITEMS = { weapons: [], armors: [] };
+
+        for(let i=0; i<50; i++) {
+            const level = i + 1;
+            const prefix = WEAPON_PREFIXES[Math.floor(i/5)];
+            const name = WEAPON_NAMES[i % 10];
+            SHOP_ITEMS.weapons.push({
+                id: `w_${i}`,
+                name: i === 0 ? "Starter Blade" : `${prefix} ${name} v.${level}`,
+                desc: `Tier ${level} tactical offensive hardware.`,
+                price: i === 0 ? 0 : Math.floor(Math.pow(level, 2.2) * 80 + level * 200),
+                damage: 40 + (i * 12),
+                reach: 90 + (i * 2),
+                rate: Math.max(150, 400 - (i * 5))
+            });
+        }
+
+        for(let i=0; i<50; i++) {
+            const level = i + 1;
+            const prefix = WEAPON_PREFIXES[Math.floor(i/5)];
+            const name = ARMOR_NAMES[i % 10];
+            SHOP_ITEMS.armors.push({
+                id: `a_${i}`,
+                name: i === 0 ? "Recruit Mesh" : `${prefix} ${name} Mark ${level}`,
+                desc: `Tier ${level} defensive plating system.`,
+                price: i === 0 ? 0 : Math.floor(Math.pow(level, 2.1) * 70 + level * 150),
+                health: 100 + (i * 45),
+                color: ARMOR_COLORS[Math.floor(i/5)] || '#ffffff'
+            });
+        }
+
+        let state = {
+            isRunning: false,
+            score: 0,
+            totalCoins: 0,
+            sessionCoins: 0,
+            wave: 1,
+            camera: { x: 0, y: 0 },
+            shake: 0,
+            lastTime: 0,
+            enemySpawnTimer: 0,
+            currentWeapon: 'w_0',
+            currentArmor: 'a_0',
+            ownedItems: ['w_0', 'a_0']
+        };
+
+        const keys = { w: false, a: false, s: false, d: false };
+        const mouse = { x: 0, y: 0, worldX: 0, worldY: 0, isDown: false };
+        let player, enemies = [], particles = [], floatingTexts = [], medics = [];
+
+        function loadData() {
+            const saved = localStorage.getItem('cyber_soldier_mega_v1');
+            if (saved) {
+                const d = JSON.parse(saved);
+                state.totalCoins = d.totalCoins || 0;
+                state.currentWeapon = d.currentWeapon || 'w_0';
+                state.currentArmor = d.currentArmor || 'a_0';
+                state.ownedItems = d.ownedItems || ['w_0', 'a_0'];
+            }
+            updateCoinUI();
+        }
+
+        function saveData() {
+            localStorage.setItem('cyber_soldier_mega_v1', JSON.stringify({
+                totalCoins: state.totalCoins,
+                currentWeapon: state.currentWeapon,
+                currentArmor: state.currentArmor,
+                ownedItems: state.ownedItems
+            }));
+        }
+
+        function updateCoinUI() {
+            const valHUD = state.isRunning ? (state.totalCoins + state.sessionCoins) : state.totalCoins;
+            document.getElementById('coinHUD').innerText = Math.floor(valHUD);
+            document.getElementById('menuCoinDisplay').innerText = Math.floor(state.totalCoins);
+            document.getElementById('shopCoinDisplay').innerText = Math.floor(state.totalCoins);
+            document.getElementById('scoreDisplay').innerText = Math.floor(state.score);
+        }
+
+        function spawnMedics() {
+            for(let i=0; i<2; i++) {
+                const ang = Math.random() * Math.PI * 2;
+                const dist = 500 + Math.random() * 300;
+                medics.push(new Medic(player.x + Math.cos(ang) * dist, player.y + Math.sin(ang) * dist));
+            }
+        }
+
+        function updateMinimap() {
+            if (!state.isRunning) return;
+            let html = '';
+            const mapSize = 160;
+            const scale = mapSize / WORLD_SIZE;
+
+            // Player Dot
+            html += `<div class="map-dot bg-cyan-400 shadow-[0_0_5px_cyan]" style="left: ${player.x * scale}px; top: ${player.y * scale}px; width: 6px; height: 6px; z-index: 5;"></div>`;
+
+            // Enemies Dots
+            enemies.forEach(e => {
+                html += `<div class="map-dot bg-rose-500" style="left: ${e.x * scale}px; top: ${e.y * scale}px;"></div>`;
+            });
+
+            // Medic Dots
+            medics.forEach(m => {
+                html += `<div class="map-dot bg-emerald-400 shadow-[0_0_3px_#10b981]" style="left: ${m.x * scale}px; top: ${m.y * scale}px;"></div>`;
+            });
+
+            minimapContent.innerHTML = html;
+        }
+
+        class Player {
+            constructor(x, y) {
+                const armor = SHOP_ITEMS.armors.find(a => a.id === state.currentArmor);
+                const weapon = SHOP_ITEMS.weapons.find(w => w.id === state.currentWeapon);
+                this.x = x; this.y = y; this.vx = 0; this.vy = 0;
+                this.radius = 22; this.angle = 0;
+                this.maxHealth = armor.health; this.health = this.maxHealth;
+                this.color = armor.color;
+                this.damage = weapon.damage; this.reach = weapon.reach; this.rate = weapon.rate;
+                this.lastSwing = 0; this.swinging = false; this.swingTimer = 0; this.hitList = new Set();
+                this.swingDuration = 250; 
+                document.getElementById('armorNameDisplay').innerText = armor.name;
+            }
+            update(dt) {
+                const speed = 0.45, friction = 0.86;
+                if (keys.w) this.vy -= speed; if (keys.s) this.vy += speed;
+                if (keys.a) this.vx -= speed; if (keys.d) this.vx += speed;
+                this.vx *= friction; this.vy *= friction;
+                this.x += this.vx * (dt/16.6); this.y += this.vy * (dt/16.6);
+                this.x = Math.max(this.radius, Math.min(WORLD_SIZE-this.radius, this.x));
+                this.y = Math.max(this.radius, Math.min(WORLD_SIZE-this.radius, this.y));
+                
+                if (!this.swinging) {
+                    this.angle = Math.atan2(mouse.worldY - this.y, mouse.worldX - this.x);
+                }
+
+                if (this.swinging) {
+                    this.swingTimer += dt;
+                    const progress = Math.min(1, this.swingTimer / this.swingDuration);
+                    const currentSwordAngle = this.attackStartAngle + (progress * Math.PI * 2);
+                    this.angle = currentSwordAngle; 
+
+                    enemies.forEach(e => {
+                        if (this.hitList.has(e)) return;
+                        const dist = Math.hypot(e.x - this.x, e.y - this.y);
+                        if (dist < this.reach + e.radius) {
+                            let enemyAngle = Math.atan2(e.y - this.y, e.x - this.x);
+                            let angleDiff = Math.atan2(Math.sin(enemyAngle - currentSwordAngle), Math.cos(enemyAngle - currentSwordAngle));
+                            if (Math.abs(angleDiff) < 0.6) { e.hit(this.damage); this.hitList.add(e); state.shake = 5; }
+                        }
+                    });
+
+                    medics.forEach(m => {
+                        if (this.hitList.has(m)) return;
+                        const dist = Math.hypot(m.x - this.x, m.y - this.y);
+                        if (dist < this.reach + m.radius) {
+                            let medicAngle = Math.atan2(m.y - this.y, m.x - this.x);
+                            let angleDiff = Math.atan2(Math.sin(medicAngle - currentSwordAngle), Math.cos(medicAngle - currentSwordAngle));
+                            if (Math.abs(angleDiff) < 0.6) { m.hit(); this.hitList.add(m); }
+                        }
+                    });
+
+                    if (this.swingTimer > this.swingDuration) this.swinging = false;
+                } else if (mouse.isDown && performance.now() - this.lastSwing > this.rate) {
+                    this.swinging = true; this.swingTimer = 0; 
+                    this.attackStartAngle = this.angle;
+                    this.lastSwing = performance.now(); 
+                    this.hitList.clear();
+                    this.vx += Math.cos(this.angle) * 4; this.vy += Math.sin(this.angle) * 4;
+                }
+            }
+            takeDamage(a) { this.health -= a; updateHealthUI(); state.shake = 15; if(this.health <= 0) die(); }
+            healFull() {
+                this.health = this.maxHealth;
+                updateHealthUI();
+                floatingTexts.push(new FloatingText(this.x, this.y - 40, "HEALTH RESTORED", "#10b981"));
+                for(let i=0; i<15; i++) particles.push(new Particle(this.x, this.y, '#10b981', 4, 8));
+            }
+            draw(c) {
+                c.save(); c.translate(this.x, this.y); c.rotate(this.angle);
+                c.shadowBlur = 15; c.shadowColor = this.color;
+                c.fillStyle = this.color;
+                fillRoundedRect(c, -15, -18, 30, 36, 12);
+                c.beginPath(); c.arc(0, 0, 10, 0, Math.PI * 2); c.fillStyle = "#fff"; c.fill();
+                c.fillStyle = "#000"; c.fillRect(0, -2, 10, 4);
+
+                if (this.swinging) {
+                    const progress = Math.min(1, this.swingTimer / this.swingDuration);
+                    c.beginPath(); 
+                    const trailGradient = c.createRadialGradient(0,0,0,0,0,this.reach);
+                    trailGradient.addColorStop(0.7, 'transparent'); trailGradient.addColorStop(1, this.color);
+                    c.strokeStyle = trailGradient; c.globalAlpha = 0.3; c.lineWidth = 15;
+                    c.arc(0, 0, this.reach, -progress * Math.PI * 2, 0); c.stroke(); c.globalAlpha = 1;
+                }
+
+                c.save(); c.translate(15, 0); 
+                c.fillStyle = '#475569'; c.fillRect(0, -10, 6, 20);
+                c.fillStyle = '#1e293b'; c.fillRect(-8, -3, 10, 6);
+                const bladeWidth = this.reach - 10;
+                c.shadowBlur = 10; c.shadowColor = 'white'; c.fillStyle = 'white';
+                c.beginPath(); c.moveTo(6, -4); c.lineTo(bladeWidth, -1); c.lineTo(bladeWidth + 8, 0); 
+                c.lineTo(bladeWidth, 1); c.lineTo(6, 4); c.closePath(); c.fill();
+                c.restore(); c.restore();
+            }
+        }
+
+        class Enemy {
+            constructor(x, y) {
+                this.x = x; this.y = y; this.radius = 24; this.speed = 2.5 + (state.wave*0.1);
+                this.hp = 20 + (state.wave * 25); this.maxHp = this.hp;
+                this.angle = 0;
+            }
+            update(dt) {
+                this.angle = Math.atan2(player.y-this.y, player.x-this.x);
+                this.x += Math.cos(this.angle) * this.speed * (dt/16.6); this.y += Math.sin(this.angle) * this.speed * (dt/16.6);
+                if(Math.hypot(player.x-this.x, player.y-this.y) < this.radius + player.radius) {
+                    player.takeDamage(10 + state.wave); this.dead = true;
+                }
+            }
+            hit(d) {
+                this.hp -= d; particles.push(new Particle(this.x, this.y, '#f43f5e', 4, 6));
+                if(this.hp <= 0) {
+                    this.dead = true; state.score += 100; state.sessionCoins += 100;
+                    floatingTexts.push(new FloatingText(this.x, this.y, `+100`, '#fbbf24'));
+                    updateCoinUI();
+                    if(state.score > 0 && state.score % 5000 === 0) { 
+                        state.wave++; 
+                        document.getElementById('waveDisplay').innerText = state.wave;
+                        spawnMedics(); 
+                    }
+                }
+            }
+            draw(c) {
+                c.save(); c.translate(this.x, this.y); c.rotate(this.angle);
+                c.shadowBlur = 15; c.shadowColor = '#f43f5e'; c.fillStyle = '#f43f5e';
+                fillRoundedRect(c, -15, -15, 30, 30, 10);
+                c.beginPath(); c.arc(5, 0, 8, 0, Math.PI * 2); c.fillStyle = '#000'; c.fill();
+                c.beginPath(); c.arc(7, 0, 3, 0, Math.PI * 2); c.fillStyle = '#fff'; c.fill();
+                c.restore();
+                c.fillStyle = 'rgba(0,0,0,0.5)'; fillRoundedRect(c, this.x-15, this.y-28, 30, 4, 2);
+                c.fillStyle = '#f43f5e'; fillRoundedRect(c, this.x-15, this.y-28, 30 * (this.hp/this.maxHp), 4, 2);
+            }
+        }
+
+        class Medic {
+            constructor(x, y) {
+                this.x = x; this.y = y; this.radius = 22; this.angle = Math.random() * Math.PI * 2;
+                this.speed = 1.5; this.changeTimer = 0; this.dead = false;
+            }
+            update(dt) {
+                this.changeTimer -= dt;
+                if (this.changeTimer <= 0) {
+                    this.angle = Math.random() * Math.PI * 2;
+                    this.changeTimer = 1000 + Math.random() * 2000;
+                }
+                this.x += Math.cos(this.angle) * this.speed * (dt/16.6);
+                this.y += Math.sin(this.angle) * this.speed * (dt/16.6);
+                this.x = Math.max(this.radius, Math.min(WORLD_SIZE-this.radius, this.x));
+                this.y = Math.max(this.radius, Math.min(WORLD_SIZE-this.radius, this.y));
+            }
+            hit() {
+                this.dead = true;
+                player.healFull();
+                state.shake = 10;
+            }
+            draw(c) {
+                c.save(); c.translate(this.x, this.y); c.rotate(this.angle);
+                c.shadowBlur = 20; c.shadowColor = '#10b981'; c.fillStyle = '#10b981';
+                fillRoundedRect(c, -15, -18, 30, 36, 12);
+                c.beginPath(); c.arc(0, 0, 8, 0, Math.PI * 2); c.fillStyle = "#fff"; c.fill();
+                c.fillStyle = "white"; c.fillRect(-2, -10, 4, 20); c.fillRect(-10, -2, 20, 4);
+                c.restore();
+                c.fillStyle = "#10b981"; c.font = "bold 10px sans-serif"; c.textAlign = "center";
+                c.fillText("MEDIC (HEAL)", this.x, this.y - 30);
+            }
+        }
+
+        class Particle {
+            constructor(x,y,c,s,v){ this.x=x;this.y=y;this.c=c;this.s=s;this.l=1;this.vx=(Math.random()-0.5)*v;this.vy=(Math.random()-0.5)*v; }
+            update(){ this.x+=this.vx;this.y+=this.vy;this.l-=0.02; }
+            draw(c){ c.globalAlpha=this.l;c.fillStyle=this.c;c.beginPath();c.arc(this.x,this.y,this.s*this.l,0,7);c.fill();c.globalAlpha=1; }
+        }
+
+        class FloatingText {
+            constructor(x,y,t,c){this.x=x;this.y=y;this.t=t;this.c=c;this.l=1;}
+            update(){this.y-=1;this.l-=0.01;}
+            draw(c){c.globalAlpha=this.l;c.fillStyle=this.c;c.font='black 24px sans-serif';c.textAlign="center";c.fillText(this.t,this.x,this.y);c.globalAlpha=1;}
+        }
+
+        function updateHealthUI() {
+            const p = Math.max(0, (player.health/player.maxHealth)*100);
+            document.getElementById('healthBar').style.width = p+'%';
+            document.getElementById('healthText').innerText = Math.ceil(p)+'%';
+        }
+
+        function die() {
+            state.isRunning = false; state.totalCoins += state.sessionCoins; saveData();
+            document.getElementById('hud').classList.add('hidden');
+            document.getElementById('gameOverScreen').classList.remove('hidden');
+            document.getElementById('earnedCoins').innerText = `+${Math.floor(state.sessionCoins)}`;
+            document.getElementById('finalScore').innerText = state.score;
+            document.getElementById('finalWave').innerText = state.wave;
+            updateCoinUI();
+        }
+
+        function gameLoop(ts) {
+            if(!state.isRunning) return;
+            const dt = ts - state.lastTime; state.lastTime = ts;
+            mouse.worldX = mouse.x + state.camera.x; mouse.worldY = mouse.y + state.camera.y;
+            player.update(dt);
+            state.enemySpawnTimer += dt;
+            if(state.enemySpawnTimer > Math.max(300, 2000 - state.wave*100)) {
+                const ang = Math.random()*Math.PI*2;
+                enemies.push(new Enemy(player.x+Math.cos(ang)*700, player.y+Math.sin(ang)*700));
+                state.enemySpawnTimer = 0;
+            }
+            enemies.forEach(e => e.update(dt)); 
+            medics.forEach(m => m.update(dt));
+            particles.forEach(p => p.update()); 
+            floatingTexts.forEach(f => f.update());
+            enemies = enemies.filter(e => !e.dead); 
+            medics = medics.filter(m => !m.dead);
+            particles = particles.filter(p => p.l > 0); 
+            floatingTexts = floatingTexts.filter(f => f.l > 0);
+            state.camera.x += (Math.max(0, Math.min(WORLD_SIZE-canvas.width, player.x-canvas.width/2)) - state.camera.x)*0.1;
+            state.camera.y += (Math.max(0, Math.min(WORLD_SIZE-canvas.height, player.y-canvas.height/2)) - state.camera.y)*0.1;
+            if(state.shake > 0) state.shake *= 0.9;
+            
+            updateMinimap();
+            render(); 
+            requestAnimationFrame(gameLoop);
+        }
+
+        function render() {
+            ctx.fillStyle = '#020617'; ctx.fillRect(0,0,canvas.width,canvas.height);
+            ctx.save(); ctx.translate(-state.camera.x + (Math.random()-0.5)*state.shake, -state.camera.y + (Math.random()-0.5)*state.shake);
+            ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 1;
+            for(let i=0; i<=WORLD_SIZE; i+=200) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,WORLD_SIZE); ctx.stroke(); ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(WORLD_SIZE,i); ctx.stroke(); }
+            ctx.strokeStyle = '#06b6d4'; ctx.lineWidth = 10; ctx.strokeRect(0,0,WORLD_SIZE,WORLD_SIZE);
+            enemies.forEach(e => e.draw(ctx)); 
+            medics.forEach(m => m.draw(ctx));
+            particles.forEach(p => p.draw(ctx)); 
+            player.draw(ctx); 
+            floatingTexts.forEach(f => f.draw(ctx));
+            ctx.restore();
+        }
+
+        function renderShop() {
+            const container = document.getElementById('shopContent'); container.innerHTML = '';
+            const items = SHOP_ITEMS[shopTab];
+            items.forEach(item => {
+                const owned = state.ownedItems.includes(item.id);
+                const equipped = (shopTab === 'weapons' ? state.currentWeapon : state.currentArmor) === item.id;
+                const canBuy = state.totalCoins >= item.price;
+                const card = document.createElement('div');
+                card.className = `item-card p-6 rounded-2xl border ${equipped ? 'border-cyan-500 bg-cyan-500/10' : 'border-slate-800 bg-slate-900/40'} flex flex-col gap-4`;
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <h3 class="font-black italic text-lg ${equipped ? 'text-cyan-400' : 'text-white'}">${item.name}</h3>
+                    </div>
+                    <p class="text-slate-500 text-xs">${item.desc}</p>
+                    <div class="flex gap-2">
+                        ${shopTab === 'weapons' ? `<div class="text-[10px] font-bold text-cyan-400 bg-cyan-950/50 px-2 py-1 rounded">DMG: ${item.damage}</div>` : `<div class="text-[10px] font-bold text-emerald-400 bg-emerald-950/50 px-2 py-1 rounded">HP: ${item.health}</div>`}
+                    </div>
+                    <button onclick="handleShop('${item.id}', ${item.price})" class="w-full py-3 rounded-xl font-black uppercase tracking-widest text-xs transition-all ${equipped ? 'bg-cyan-500 text-slate-950' : owned ? 'bg-slate-700 text-white' : canBuy ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-600 opacity-50 cursor-not-allowed'}">
+                        ${equipped ? 'Equipped' : owned ? 'Equip' : item.price + ' Coins'}
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        window.handleShop = (id, price) => {
+            const owned = state.ownedItems.includes(id);
+            if(owned) { if(shopTab === 'weapons') state.currentWeapon = id; else state.currentArmor = id; }
+            else if(state.totalCoins >= price) { state.totalCoins -= price; state.ownedItems.push(id); if(shopTab === 'weapons') state.currentWeapon = id; else state.currentArmor = id; }
+            updateCoinUI(); renderShop(); saveData();
+        };
+
+        document.getElementById('startBtn').onclick = () => { 
+            state.isRunning = true; state.lastTime = performance.now(); 
+            player = new Player(WORLD_SIZE/2, WORLD_SIZE/2); 
+            enemies=[]; particles=[]; medics=[];
+            state.sessionCoins = 0; state.score = 0; state.wave = 1;
+            document.getElementById('waveDisplay').innerText = state.wave;
+            spawnMedics();
+            document.getElementById('mainMenu').classList.add('hidden'); 
+            document.getElementById('hud').classList.remove('hidden'); 
+            requestAnimationFrame(gameLoop); 
+        };
+        document.getElementById('restartBtn').onclick = () => { document.getElementById('gameOverScreen').classList.add('hidden'); document.getElementById('startBtn').click(); };
+        document.getElementById('homeBtn').onclick = () => { document.getElementById('gameOverScreen').classList.add('hidden'); document.getElementById('mainMenu').classList.remove('hidden'); updateCoinUI(); };
+        document.getElementById('openShopBtn').onclick = () => { document.getElementById('shopScreen').classList.remove('hidden'); renderShop(); };
+        document.getElementById('closeShopBtn').onclick = () => { document.getElementById('shopScreen').classList.add('hidden'); updateCoinUI(); };
+        let shopTab = 'weapons';
+        document.getElementById('weaponsTab').onclick = () => { shopTab='weapons'; document.getElementById('weaponsTab').classList.add('shop-tab-active'); document.getElementById('armorsTab').classList.remove('shop-tab-active'); renderShop(); };
+        document.getElementById('armorsTab').onclick = () => { shopTab='armors'; document.getElementById('armorsTab').classList.add('shop-tab-active'); document.getElementById('weaponsTab').classList.remove('shop-tab-active'); renderShop(); };
+
+        window.onresize = () => { canvas.width=window.innerWidth; canvas.height=window.innerHeight; };
+        window.onkeydown = e => { if(keys.hasOwnProperty(e.key.toLowerCase())) keys[e.key.toLowerCase()]=true; };
+        window.onkeyup = e => { if(keys.hasOwnProperty(e.key.toLowerCase())) keys[e.key.toLowerCase()]=false; };
+        window.onmousemove = e => { mouse.x=e.clientX; mouse.y=e.clientY; };
+        window.onmousedown = () => mouse.isDown=true; window.onmouseup = () => mouse.isDown=false;
+
+        canvas.width=window.innerWidth; canvas.height=window.innerHeight;
+        loadData();
+    </script>
+</body>
+</html>
