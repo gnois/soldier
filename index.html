@@ -563,6 +563,9 @@
                 if(this.hp <= 0) {
                     this.dead = true; state.score += 100; state.sessionCoins += 100;
                     sfx.enemyDie(); updateCoinUI();
+                    const offsetX = (Math.random() - 0.5) * 80;
+                    const offsetY = (Math.random() - 0.5) * 80;
+                    floatingTexts.push(new FloatingText(player.x + offsetX, player.y + offsetY, "+100", "#fbbf24"));
                     if(state.score >= state.scoreThreshold && !state.isBossPhase) startBossPhase();
                 } else {
                     sfx.hit();
@@ -596,6 +599,11 @@
                 floatingTexts.push(new FloatingText(this.x, this.y-60, "OOF!", "#e11d48"));
                 if(this.hp <= 0) {
                     this.dead = true; sfx.bossDie(); state.score += 2500; state.sessionCoins += 2500;
+                    for(let i=0; i<5; i++) {
+                        const ox = (Math.random()-0.5)*150;
+                        const oy = (Math.random()-0.5)*150;
+                        floatingTexts.push(new FloatingText(player.x + ox, player.y + oy, "+500", "#fbbf24"));
+                    }
                     endBossPhase();
                 }
             }
@@ -638,8 +646,8 @@
 
         class FloatingText {
             constructor(x,y,t,c){this.x=x;this.y=y;this.t=t;this.c=c;this.l=1;}
-            update(){this.y-=1;this.l-=0.02;}
-            draw(c){c.globalAlpha=this.l;c.fillStyle=this.c;c.font='900 24px sans-serif';c.textAlign="center";c.fillText(this.t,this.x,this.y);c.globalAlpha=1;}
+            update(){this.y-=1.5;this.l-=0.015;}
+            draw(c){c.globalAlpha=this.l;c.fillStyle=this.c;c.font='900 28px sans-serif';c.textAlign="center";c.shadowBlur=8;c.shadowColor="rgba(0,0,0,0.5)";c.fillText(this.t,this.x,this.y);c.globalAlpha=1;c.shadowBlur=0;}
         }
 
         function startBossPhase() {
@@ -678,8 +686,15 @@
 
         function updateMinimap() {
             let html = ''; const scale = 120 / WORLD_SIZE;
-            html += `<div class="map-dot bg-cyan-400" style="left:${player.x*scale}px;top:${player.y*scale}px;width:6px;height:6px;"></div>`;
+            // Player
+            html += `<div class="map-dot bg-cyan-400" style="left:${player.x*scale}px;top:${player.y*scale}px;width:6px;height:6px;z-index:5;"></div>`;
+            // Enemies
             enemies.forEach(e => { html += `<div class="map-dot bg-rose-500" style="left:${e.x*scale}px;top:${e.y*scale}px;"></div>`; });
+            // Bosses
+            bosses.forEach(b => { html += `<div class="map-dot bg-rose-600" style="left:${b.x*scale}px;top:${b.y*scale}px;width:8px;height:8px;"></div>`; });
+            // Healing Bots (Medics) - Bright Green
+            medics.forEach(m => { html += `<div class="map-dot bg-emerald-400 shadow-[0_0_5px_#10b981]" style="left:${m.x*scale}px;top:${m.y*scale}px;width:5px;height:5px;"></div>`; });
+            
             minimapContent.innerHTML = html;
         }
 
