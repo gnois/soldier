@@ -104,19 +104,12 @@
     <!-- HUD -->
     <div id="hud" class="absolute top-0 left-0 w-full p-4 flex justify-between items-start pointer-events-none hidden z-10">
         <div class="flex flex-col gap-0.5">
-            <!-- Score Area -->
             <div class="text-xl md:text-3xl font-black text-cyan-400 italic leading-none">SCORE: <span id="scoreDisplay">0</span></div>
-            
-            <!-- Coin Area (Moved even higher) -->
             <div class="flex items-center gap-2 text-amber-400 font-black text-xs md:text-base mt-0.5">
                 <div class="w-2 h-2 bg-amber-400 rounded-full shadow-[0_0_8px_#fbbf24]"></div>
                 <span class="tracking-wider">COINS: <span id="coinHUD">0</span></span>
             </div>
-
-            <!-- Wave Display -->
             <div id="waveLabel" class="text-slate-400 font-black uppercase tracking-widest text-[9px] mt-1.5">WAVE: <span id="waveDisplay" class="text-white">1</span></div>
-            
-            <!-- Health Area -->
             <div class="mt-1.5 w-44 md:w-64">
                 <div class="flex justify-between text-[10px] font-black mb-1 text-slate-500 tracking-widest uppercase">
                     <span>VITALS</span>
@@ -127,8 +120,6 @@
                 </div>
                 <div id="armorNameDisplay" class="text-[7px] text-slate-600 font-black mt-1 tracking-[0.2em] uppercase">RECRUIT MESH</div>
             </div>
-
-            <!-- Boss Health -->
             <div id="bossBarContainer" class="hidden mt-4">
                 <div class="flex justify-between text-[8px] font-black mb-1 text-rose-500 tracking-[0.3em] uppercase">
                     <span id="bossNameLabel">TITAN BOSS</span>
@@ -139,7 +130,6 @@
                 </div>
             </div>
         </div>
-
         <div class="flex flex-col items-end gap-2 pr-12">
             <div id="minimapContainer" class="p-1 bg-slate-900/40 rounded-xl border border-slate-800 backdrop-blur-sm">
                 <div id="minimap">
@@ -151,7 +141,6 @@
 
     <!-- Main Menu -->
     <div id="mainMenu" class="absolute inset-0 flex flex-col items-center justify-center z-20 glass-panel p-4 text-center">
-        <!-- Top Left: Shop -->
         <div class="absolute top-4 left-4 md:top-8 md:left-8">
             <button id="openShopBtn" class="flex items-center gap-2 md:gap-4 px-4 py-2 md:px-8 md:py-4 bg-slate-800 hover:bg-cyan-600 border border-slate-700 rounded-xl md:rounded-2xl transition-all group">
                 <span class="text-xl md:text-2xl">🛒</span>
@@ -161,8 +150,6 @@
                 </div>
             </button>
         </div>
-
-        <!-- Top Right: Vault -->
         <div class="absolute top-4 right-4 md:top-8 md:right-8 text-right">
             <div class="text-slate-500 text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] mb-1">Vault</div>
             <div class="flex items-center gap-2 justify-end">
@@ -170,16 +157,11 @@
                 <div class="text-xl md:text-4xl font-black text-amber-400" id="menuCoinDisplay">0</div>
             </div>
         </div>
-
-        <!-- Center: Branding -->
         <h1 class="text-5xl md:text-9xl font-black mb-2 text-transparent bg-clip-text bg-gradient-to-b from-cyan-400 to-blue-700 italic tracking-tighter">SOLDIER ASSAULT</h1>
         <p class="text-slate-400 text-xs md:text-xl tracking-[0.3em] md:tracking-[0.5em] uppercase mb-8 md:mb-12">Tiered Augmentation Combat</p>
-        
         <button id="startBtn" class="px-10 py-4 md:px-20 md:py-6 bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-black text-xl md:text-3xl rounded-full transition-all hover:scale-105 active:scale-95 shadow-[0_0_40px_rgba(6,182,212,0.4)] uppercase italic tracking-widest">
             Enter the Grid
         </button>
-
-        <!-- Bottom Right: Sound Control -->
         <div class="absolute bottom-4 right-4 md:bottom-8 md:right-8 flex flex-col items-center gap-2">
             <div class="text-[8px] font-black text-slate-500 uppercase tracking-widest">System Audio</div>
             <button id="muteBtn" class="mute-btn" title="Toggle Sound">
@@ -189,7 +171,7 @@
         </div>
     </div>
 
-    <!-- Expanded Shop -->
+    <!-- Shop Screen -->
     <div id="shopScreen" class="absolute inset-0 flex items-center justify-center z-30 glass-panel hidden p-2 md:p-4">
         <div class="w-full max-w-6xl h-full md:h-[90vh] bg-slate-950 rounded-xl md:rounded-3xl border border-slate-800 flex flex-col shadow-2xl overflow-hidden">
             <div class="p-4 md:p-8 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
@@ -207,13 +189,11 @@
                     </button>
                 </div>
             </div>
-
             <div class="flex border-b border-slate-800">
                 <button id="weaponsTab" class="flex-1 py-4 md:py-6 text-xs md:text-lg font-black uppercase tracking-widest shop-tab-active transition-all">Weapons</button>
                 <button id="armorsTab" class="flex-1 py-4 md:py-6 text-xs md:text-lg font-black uppercase tracking-widest bg-slate-900 text-slate-500 hover:text-white transition-all">Armor</button>
                 <button id="bootsTab" class="flex-1 py-4 md:py-6 text-xs md:text-lg font-black uppercase tracking-widest bg-slate-900 text-slate-500 hover:text-white transition-all">Boots</button>
             </div>
-
             <div id="shopContent" class="flex-1 overflow-y-auto p-4 md:p-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4 custom-scrollbar bg-slate-950"></div>
         </div>
     </div>
@@ -241,39 +221,25 @@
         const muteBtn = document.getElementById('muteBtn');
         const WORLD_SIZE = 3000;
 
-        // --- SOUND EFFECTS SYNTHESIZER ---
         class SoundFX {
-            constructor() {
-                this.ctx = null;
-                this.whiteNoiseBuffer = null;
-                this.isMuted = false;
-            }
+            constructor() { this.ctx = null; this.whiteNoiseBuffer = null; this.isMuted = false; }
             init() {
-                if (!this.ctx) {
-                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-                    this.createNoiseBuffer();
-                }
-                if (this.ctx.state === 'suspended') {
-                    this.ctx.resume();
-                }
+                if (!this.ctx) { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); this.createNoiseBuffer(); }
+                if (this.ctx.state === 'suspended') this.ctx.resume();
             }
             toggleMute() {
                 this.isMuted = !this.isMuted;
                 document.getElementById('soundOnIcon').classList.toggle('hidden', this.isMuted);
                 document.getElementById('soundOffIcon').classList.toggle('hidden', !this.isMuted);
                 document.getElementById('muteBtn').classList.toggle('muted', this.isMuted);
-                if (this.isMuted && 'speechSynthesis' in window) {
-                    window.speechSynthesis.cancel();
-                }
+                if (this.isMuted && 'speechSynthesis' in window) window.speechSynthesis.cancel();
                 return this.isMuted;
             }
             createNoiseBuffer() {
                 const bufferSize = this.ctx.sampleRate * 2;
                 this.whiteNoiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
                 const output = this.whiteNoiseBuffer.getChannelData(0);
-                for (let i = 0; i < bufferSize; i++) {
-                    output[i] = Math.random() * 2 - 1;
-                }
+                for (let i = 0; i < bufferSize; i++) output[i] = Math.random() * 2 - 1;
             }
             playTone(freq, type, duration, vol = 0.1, slideFreq = null) {
                 if (!this.ctx || this.isMuted) return;
@@ -281,57 +247,39 @@
                 const gain = this.ctx.createGain();
                 osc.type = type;
                 osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-                if (slideFreq) {
-                    osc.frequency.exponentialRampToValueAtTime(slideFreq, this.ctx.currentTime + duration);
-                }
+                if (slideFreq) osc.frequency.exponentialRampToValueAtTime(slideFreq, this.ctx.currentTime + duration);
                 gain.gain.setValueAtTime(vol, this.ctx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-                osc.start();
-                osc.stop(this.ctx.currentTime + duration);
+                osc.connect(gain); gain.connect(this.ctx.destination);
+                osc.start(); osc.stop(this.ctx.currentTime + duration);
             }
-
             swing() {
                 if (!this.ctx || this.isMuted) return;
                 const duration = 0.2;
                 const noise = this.ctx.createBufferSource();
                 noise.buffer = this.whiteNoiseBuffer;
-
                 const filter = this.ctx.createBiquadFilter();
                 filter.type = "lowpass";
                 filter.frequency.setValueAtTime(4000, this.ctx.currentTime);
                 filter.frequency.exponentialRampToValueAtTime(400, this.ctx.currentTime + duration);
-                filter.Q.setValueAtTime(5, this.ctx.currentTime);
-
                 const gain = this.ctx.createGain();
                 gain.gain.setValueAtTime(0, this.ctx.currentTime);
                 gain.gain.linearRampToValueAtTime(0.2, this.ctx.currentTime + 0.05);
                 gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
-
-                noise.connect(filter);
-                filter.connect(gain);
-                gain.connect(this.ctx.destination);
-
-                noise.start();
-                noise.stop(this.ctx.currentTime + duration);
-                
+                noise.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
+                noise.start(); noise.stop(this.ctx.currentTime + duration);
                 this.playTone(150, 'sine', duration, 0.05, 80);
             }
-            
             oof() {
                 if (this.isMuted) return;
                 if ('speechSynthesis' in window) {
                     window.speechSynthesis.cancel();
                     const utterance = new SpeechSynthesisUtterance("oof");
-                    utterance.pitch = 1.8;
-                    utterance.rate = 3.0; 
-                    utterance.volume = 0.8;
+                    utterance.pitch = 1.8; utterance.rate = 3.0; utterance.volume = 0.8;
                     window.speechSynthesis.speak(utterance);
                 }
                 this.playTone(350, 'sine', 0.1, 0.1, 200);
             }
-
             hit() { this.oof(); } 
             playerHit() { this.oof(); } 
             enemyDie() { this.playTone(200, 'sawtooth', 0.15, 0.05, 50); }
@@ -345,28 +293,20 @@
         }
         
         const sfx = new SoundFX();
-        muteBtn.onclick = () => {
-            sfx.init();
-            sfx.toggleMute();
-        };
+        muteBtn.onclick = () => { sfx.init(); sfx.toggleMute(); };
         
         function fillRoundedRect(c, x, y, width, height, radius) {
-            c.beginPath();
-            c.moveTo(x + radius, y);
-            c.lineTo(x + width - radius, y);
+            c.beginPath(); c.moveTo(x + radius, y); c.lineTo(x + width - radius, y);
             c.quadraticCurveTo(x + width, y, x + width, y + radius);
             c.lineTo(x + width, y + height - radius);
             c.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
             c.lineTo(x + radius, y + height);
             c.quadraticCurveTo(x, y + height, x, y + height - radius);
-            c.lineTo(x, y + radius);
-            c.quadraticCurveTo(x, y, x + radius, y);
-            c.closePath();
-            c.fill();
+            c.lineTo(x, y + radius); c.quadraticCurveTo(x, y, x + radius, y);
+            c.closePath(); c.fill();
         }
 
         const SHOP_ITEMS = { weapons: [], armors: [], boots: [] };
-        
         const WEAPON_PREFIXES = ["Rust", "Iron", "Neon", "Pulse", "Sonic", "Thermal", "Plasma", "Void", "Quantum", "Omega"];
         const WEAPON_NAMES = ["Blade", "Saber", "Edge", "Cutter", "Reaver", "Slasher", "Cleaver", "Katana", "Glaive", "Eviscerator"];
         const ARMOR_NAMES = ["Mesh", "Suit", "Plate", "Shell", "Frame", "Guard", "Skin", "Chassis", "Core", "Bastion"];
@@ -380,17 +320,14 @@
                 name: i === 0 ? "Starter Blade" : `${WEAPON_PREFIXES[Math.floor(i/5)]} ${WEAPON_NAMES[i % 10]} v.${level}`,
                 desc: `Tier ${level} damage augment.`,
                 price: i === 0 ? 0 : Math.floor(Math.pow(level, 2.2) * 80 + 200),
-                damage: 40 + (i * 15),
-                reach: 90 + (i * 2),
-                rate: Math.max(150, 400 - (i * 5))
+                damage: 40 + (i * 15), reach: 90 + (i * 2), rate: Math.max(150, 400 - (i * 5))
             });
             SHOP_ITEMS.armors.push({
                 id: `a_${i}`,
                 name: i === 0 ? "Recruit Mesh" : `${WEAPON_PREFIXES[Math.floor(i/5)]} ${ARMOR_NAMES[i % 10]} Mk.${level}`,
                 desc: `Tier ${level} survival plating.`,
                 price: i === 0 ? 0 : Math.floor(Math.pow(level, 2.1) * 70 + 150),
-                health: 100 + (i * 50),
-                color: ARMOR_COLORS[Math.floor(i/5)] || '#ffffff'
+                health: 100 + (i * 50), color: ARMOR_COLORS[Math.floor(i/5)] || '#ffffff'
             });
         }
         for(let i=0; i<20; i++) {
@@ -405,21 +342,10 @@
         }
 
         let state = {
-            isRunning: false,
-            score: 0,
-            totalCoins: 0,
-            sessionCoins: 0,
-            wave: 1,
-            isBossPhase: false,
-            camera: { x: 0, y: 0 },
-            shake: 0,
-            lastTime: 0,
-            enemySpawnTimer: 0,
-            currentWeapon: 'w_0',
-            currentArmor: 'a_0',
-            currentBoots: 'b_0',
-            ownedItems: ['w_0', 'a_0', 'b_0'],
-            scoreThreshold: 3000
+            isRunning: false, score: 0, totalCoins: 0, sessionCoins: 0, wave: 1,
+            isBossPhase: false, camera: { x: 0, y: 0 }, shake: 0, lastTime: 0,
+            enemySpawnTimer: 0, currentWeapon: 'w_0', currentArmor: 'a_0', currentBoots: 'b_0',
+            ownedItems: ['w_0', 'a_0', 'b_0'], scoreThreshold: 3000
         };
 
         const keys = { w: false, a: false, s: false, d: false };
@@ -430,10 +356,8 @@
             const saved = localStorage.getItem('cyber_soldier_storage');
             if (saved) {
                 const d = JSON.parse(saved);
-                state.totalCoins = d.totalCoins || 0;
-                state.currentWeapon = d.currentWeapon || 'w_0';
-                state.currentArmor = d.currentArmor || 'a_0';
-                state.currentBoots = d.currentBoots || 'b_0';
+                state.totalCoins = d.totalCoins || 0; state.currentWeapon = d.currentWeapon || 'w_0';
+                state.currentArmor = d.currentArmor || 'a_0'; state.currentBoots = d.currentBoots || 'b_0';
                 state.ownedItems = d.ownedItems || ['w_0', 'a_0', 'b_0'];
             }
             updateCoinUI();
@@ -441,33 +365,25 @@
 
         function saveData() {
             localStorage.setItem('cyber_soldier_storage', JSON.stringify({
-                totalCoins: state.totalCoins,
-                currentWeapon: state.currentWeapon,
-                currentArmor: state.currentArmor,
-                currentBoots: state.currentBoots,
+                totalCoins: state.totalCoins, currentWeapon: state.currentWeapon,
+                currentArmor: state.currentArmor, currentBoots: state.currentBoots,
                 ownedItems: state.ownedItems
             }));
         }
 
         function updateCoinUI() {
             const currentTotal = state.isRunning ? (state.totalCoins + state.sessionCoins) : state.totalCoins;
-            const coinHUD = document.getElementById('coinHUD');
-            if (coinHUD) coinHUD.innerText = Math.floor(currentTotal);
-            const mcd = document.getElementById('menuCoinDisplay');
-            if (mcd) mcd.innerText = Math.floor(state.totalCoins);
-            const scd = document.getElementById('shopCoinDisplay');
-            if (scd) scd.innerText = Math.floor(state.totalCoins);
-            const sd = document.getElementById('scoreDisplay');
-            if (sd) sd.innerText = Math.floor(state.score);
+            if (document.getElementById('coinHUD')) document.getElementById('coinHUD').innerText = Math.floor(currentTotal);
+            if (document.getElementById('menuCoinDisplay')) document.getElementById('menuCoinDisplay').innerText = Math.floor(state.totalCoins);
+            if (document.getElementById('shopCoinDisplay')) document.getElementById('shopCoinDisplay').innerText = Math.floor(state.totalCoins);
+            if (document.getElementById('scoreDisplay')) document.getElementById('scoreDisplay').innerText = Math.floor(state.score);
         }
 
         function updateHealthUI() {
             if (!player) return;
             const p = Math.max(0, (player.health/player.maxHealth)*100);
-            const hb = document.getElementById('healthBar');
-            if (hb) hb.style.width = p+'%';
-            const ht = document.getElementById('healthText');
-            if (ht) ht.innerText = Math.ceil(p)+'%';
+            if (document.getElementById('healthBar')) document.getElementById('healthBar').style.width = p+'%';
+            if (document.getElementById('healthText')) document.getElementById('healthText').innerText = Math.ceil(p)+'%';
         }
 
         class Player {
@@ -475,24 +391,12 @@
                 const arm = SHOP_ITEMS.armors.find(a => a.id === state.currentArmor) || SHOP_ITEMS.armors[0];
                 const wpn = SHOP_ITEMS.weapons.find(w => w.id === state.currentWeapon) || SHOP_ITEMS.weapons[0];
                 const bts = SHOP_ITEMS.boots.find(b => b.id === state.currentBoots) || SHOP_ITEMS.boots[0];
-                
-                this.x = x; this.y = y; this.vx = 0; this.vy = 0;
-                this.radius = 22; this.angle = 0;
-                this.maxHealth = arm.health; 
-                this.health = this.maxHealth;
-                this.color = arm.color;
-                this.damage = wpn.damage; 
-                this.reach = wpn.reach; 
-                this.rate = wpn.rate;
-                this.moveSpeed = bts.speed;
-                this.lastSwing = 0; 
-                this.swinging = false; 
-                this.swingTimer = 0;
-                this.swingDuration = 200; 
+                this.x = x; this.y = y; this.vx = 0; this.vy = 0; this.radius = 22; this.angle = 0;
+                this.maxHealth = arm.health; this.health = this.maxHealth; this.color = arm.color;
+                this.damage = wpn.damage; this.reach = wpn.reach; this.rate = wpn.rate; this.moveSpeed = bts.speed;
+                this.lastSwing = 0; this.swinging = false; this.swingTimer = 0; this.swingDuration = 200; 
                 this.hitList = new Set();
-                
-                const and = document.getElementById('armorNameDisplay');
-                if (and) and.innerText = arm.name;
+                if (document.getElementById('armorNameDisplay')) document.getElementById('armorNameDisplay').innerText = arm.name;
                 updateHealthUI();
             }
             update(dt) {
@@ -503,9 +407,7 @@
                 this.x += this.vx * moveDt; this.y += this.vy * moveDt;
                 this.x = Math.max(this.radius, Math.min(WORLD_SIZE-this.radius, this.x));
                 this.y = Math.max(this.radius, Math.min(WORLD_SIZE-this.radius, this.y));
-
                 this.angle = Math.atan2(mouse.worldY - this.y, mouse.worldX - this.x);
-
                 if (this.swinging) {
                     this.swingTimer += dt;
                     const prog = Math.min(1, this.swingTimer / this.swingDuration);
@@ -547,9 +449,7 @@
                 if (this.swinging) {
                     const p = Math.min(1, this.swingTimer/this.swingDuration);
                     c.rotate(-Math.PI/2 + p * Math.PI);
-                } else {
-                    c.rotate(-Math.PI/2); c.translate(8, 0);
-                }
+                } else { c.rotate(-Math.PI/2); c.translate(8, 0); }
                 c.translate(15, 0); c.fillStyle='#475569'; c.fillRect(0,-10,6,20);
                 c.shadowBlur=10; c.shadowColor='white'; c.fillStyle='white';
                 c.beginPath(); c.moveTo(6,-4); c.lineTo(this.reach-10,-1); c.lineTo(this.reach-2,0);
@@ -561,11 +461,16 @@
         class Enemy {
             constructor(x, y) {
                 this.x = x; this.y = y; this.radius = 24; this.speed = 2.5 + (state.wave*0.1);
-                this.hp = 20 + (state.wave * 30); this.maxHp = this.hp;
-                this.angle = 0;
+                this.hp = 20 + (state.wave * 30); this.maxHp = this.hp; this.angle = 0;
+                this.warmup = 1000; // 1 second wait
+                this.dead = false;
             }
             update(dt) {
                 this.angle = Math.atan2(player.y-this.y, player.x-this.x);
+                if (this.warmup > 0) {
+                    this.warmup -= dt;
+                    return;
+                }
                 this.x += Math.cos(this.angle)*this.speed*(dt/16); this.y += Math.sin(this.angle)*this.speed*(dt/16);
                 if(Math.hypot(player.x-this.x, player.y-this.y) < this.radius + player.radius) {
                     player.takeDamage(10 + state.wave*2); this.dead = true;
@@ -576,21 +481,24 @@
                 if(this.hp <= 0) {
                     this.dead = true; state.score += 100; state.sessionCoins += 100;
                     sfx.enemyDie(); updateCoinUI();
-                    const offsetX = (Math.random() - 0.5) * 80;
-                    const offsetY = (Math.random() - 0.5) * 80;
-                    floatingTexts.push(new FloatingText(player.x + offsetX, player.y + offsetY, "+100", "#fbbf24"));
+                    floatingTexts.push(new FloatingText(player.x + (Math.random()-0.5)*80, player.y + (Math.random()-0.5)*80, "+100", "#fbbf24"));
                     if(state.score >= state.scoreThreshold && !state.isBossPhase) startBossPhase();
                 } else {
-                    sfx.hit();
-                    floatingTexts.push(new FloatingText(this.x, this.y-20, "OOF!", "#f43f5e"));
+                    sfx.hit(); floatingTexts.push(new FloatingText(this.x, this.y-20, "OOF!", "#f43f5e"));
                 }
             }
             draw(c) {
                 c.save(); c.translate(this.x, this.y); c.rotate(this.angle);
+                if (this.warmup > 0) {
+                    // Spawn warning indicator
+                    c.strokeStyle = '#f43f5e'; c.lineWidth = 2; c.setLineDash([5, 5]);
+                    c.beginPath(); c.arc(0, 0, this.radius + 10 * (this.warmup/1000), 0, 7); c.stroke();
+                    c.setLineDash([]); c.globalAlpha = 0.5;
+                }
                 c.shadowBlur=15; c.shadowColor='#f43f5e'; c.fillStyle='#f43f5e';
                 fillRoundedRect(c, -15,-15,30,30,10);
                 c.beginPath(); c.arc(5,0,8,0,7); c.fillStyle='#000'; c.fill();
-                c.restore();
+                c.restore(); c.globalAlpha = 1;
                 c.fillStyle='rgba(0,0,0,0.5)'; fillRoundedRect(c, this.x-15, this.y-28, 30, 4, 2);
                 c.fillStyle='#f43f5e'; fillRoundedRect(c, this.x-15, this.y-28, 30*(this.hp/this.maxHp), 4, 2);
             }
@@ -612,11 +520,7 @@
                 floatingTexts.push(new FloatingText(this.x, this.y-60, "OOF!", "#e11d48"));
                 if(this.hp <= 0) {
                     this.dead = true; sfx.bossDie(); state.score += 2500; state.sessionCoins += 2500;
-                    for(let i=0; i<5; i++) {
-                        const ox = (Math.random()-0.5)*150;
-                        const oy = (Math.random()-0.5)*150;
-                        floatingTexts.push(new FloatingText(player.x + ox, player.y + oy, "+500", "#fbbf24"));
-                    }
+                    for(let i=0; i<5; i++) floatingTexts.push(new FloatingText(player.x + (Math.random()-0.5)*150, player.y + (Math.random()-0.5)*150, "+500", "#fbbf24"));
                     endBossPhase();
                 }
             }
@@ -638,10 +542,7 @@
                 this.x += Math.cos(this.angle)*this.speed; this.y += Math.sin(this.angle)*this.speed;
                 this.x = Math.max(22, Math.min(WORLD_SIZE-22, this.x)); this.y = Math.max(22, Math.min(WORLD_SIZE-22, this.y));
             }
-            hit() { 
-                this.hp--; sfx.hit(); 
-                if(this.hp <= 0) { this.dead = true; player.healFull(); }
-            }
+            hit() { this.hp--; sfx.hit(); if(this.hp <= 0) { this.dead = true; player.healFull(); } }
             draw(c) {
                 c.save(); c.translate(this.x, this.y); c.rotate(this.angle);
                 c.shadowBlur=20; c.shadowColor='#10b981'; c.fillStyle='#10b981';
@@ -679,10 +580,8 @@
 
         function updateBossHealthBar(hp, max) {
             const p = Math.max(0, (hp/max)*100);
-            const bhb = document.getElementById('bossHealthBar');
-            if (bhb) bhb.style.width = p+'%';
-            const bht = document.getElementById('bossHealthText');
-            if (bht) bht.innerText = `${Math.ceil(hp)} / ${max}`;
+            if (document.getElementById('bossHealthBar')) document.getElementById('bossHealthBar').style.width = p+'%';
+            if (document.getElementById('bossHealthText')) document.getElementById('bossHealthText').innerText = `${Math.ceil(hp)} / ${max}`;
         }
 
         function die() {
@@ -697,17 +596,26 @@
 
         function spawnMedics() { if(!state.isBossPhase) medics.push(new Medic(player.x + 400, player.y + 400)); }
 
+        function spawnEnemy() {
+            // Find a spot away from player
+            let ex, ey, dist;
+            let attempts = 0;
+            do {
+                ex = Math.random() * WORLD_SIZE;
+                ey = Math.random() * WORLD_SIZE;
+                dist = Math.hypot(ex - player.x, ey - player.y);
+                attempts++;
+            } while (dist < 400 && attempts < 10); // Ensure they spawn at least 400px away
+            
+            enemies.push(new Enemy(ex, ey));
+        }
+
         function updateMinimap() {
             let html = ''; const scale = 120 / WORLD_SIZE;
-            // Player
             html += `<div class="map-dot bg-cyan-400" style="left:${player.x*scale}px;top:${player.y*scale}px;width:6px;height:6px;z-index:5;"></div>`;
-            // Enemies
             enemies.forEach(e => { html += `<div class="map-dot bg-rose-500" style="left:${e.x*scale}px;top:${e.y*scale}px;"></div>`; });
-            // Bosses
             bosses.forEach(b => { html += `<div class="map-dot bg-rose-600" style="left:${b.x*scale}px;top:${b.y*scale}px;width:8px;height:8px;"></div>`; });
-            // Healing Bots
             medics.forEach(m => { html += `<div class="map-dot bg-emerald-400 shadow-[0_0_5px_#10b981]" style="left:${m.x*scale}px;top:${m.y*scale}px;width:5px;height:5px;"></div>`; });
-            
             minimapContent.innerHTML = html;
         }
 
@@ -719,8 +627,7 @@
             if(!state.isBossPhase) {
                 state.enemySpawnTimer += dt;
                 if(state.enemySpawnTimer > Math.max(400, 1500 - state.wave * 100)) {
-                    enemies.push(new Enemy(player.x + (Math.random()-0.5)*1200, player.y + (Math.random()-0.5)*1200));
-                    state.enemySpawnTimer = 0;
+                    spawnEnemy(); state.enemySpawnTimer = 0;
                 }
             }
             enemies.forEach(e => e.update(dt)); bosses.forEach(b => b.update(dt)); medics.forEach(m => m.update(dt));
@@ -745,16 +652,9 @@
 
         let shopTab = 'weapons';
         function updateTabStyles() {
-            const tabs = ['weapons', 'armors', 'boots'];
-            tabs.forEach(t => {
+            ['weapons', 'armors', 'boots'].forEach(t => {
                 const btn = document.getElementById(t + 'Tab');
-                if (btn) {
-                    if (shopTab === t) {
-                        btn.className = 'flex-1 py-4 md:py-6 text-xs md:text-lg font-black uppercase tracking-widest shop-tab-active transition-all';
-                    } else {
-                        btn.className = 'flex-1 py-4 md:py-6 text-xs md:text-lg font-black uppercase tracking-widest bg-slate-900 text-slate-500 hover:text-white transition-all';
-                    }
-                }
+                if (btn) btn.className = (shopTab === t) ? 'flex-1 py-4 md:py-6 text-xs md:text-lg font-black uppercase tracking-widest shop-tab-active transition-all' : 'flex-1 py-4 md:py-6 text-xs md:text-lg font-black uppercase tracking-widest bg-slate-900 text-slate-500 hover:text-white transition-all';
             });
         }
 
@@ -787,15 +687,11 @@
         };
 
         document.getElementById('startBtn').onclick = () => {
-            sfx.init(); sfx.click();
-            state.isRunning = true; state.lastTime = performance.now();
+            sfx.init(); sfx.click(); state.isRunning = true; state.lastTime = performance.now();
             player = new Player(WORLD_SIZE/2, WORLD_SIZE/2); 
-            enemies=[]; medics=[]; bosses=[];
-            state.sessionCoins = 0; state.score = 0; state.wave = 1; state.scoreThreshold = 3000;
-            spawnMedics(); 
-            document.getElementById('mainMenu').classList.add('hidden');
-            document.getElementById('hud').classList.remove('hidden'); 
-            requestAnimationFrame(gameLoop);
+            enemies=[]; medics=[]; bosses=[]; state.sessionCoins = 0; state.score = 0; state.wave = 1; state.scoreThreshold = 3000;
+            spawnMedics(); document.getElementById('mainMenu').classList.add('hidden');
+            document.getElementById('hud').classList.remove('hidden'); requestAnimationFrame(gameLoop);
         };
         document.getElementById('restartBtn').onclick = () => { sfx.init(); sfx.click(); document.getElementById('gameOverScreen').classList.add('hidden'); document.getElementById('startBtn').click(); };
         document.getElementById('homeBtn').onclick = () => { sfx.init(); sfx.click(); document.getElementById('gameOverScreen').classList.add('hidden'); document.getElementById('mainMenu').classList.remove('hidden'); updateCoinUI(); };
